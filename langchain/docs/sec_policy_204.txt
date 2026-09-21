@@ -1,0 +1,5 @@
+Enterprise Policy SEC-204: Authentication and Access Control.
+All engineering personnel must authenticate to production clusters using hardware MFA security keys.
+Session tokens expire automatically after 8 hours of inactivity.
+Emergency break-glass access requires dual authorization from the VP of Engineering and Lead Security Architect.
+Breach of MFA protocol triggers immediate credential revocation and internal review.

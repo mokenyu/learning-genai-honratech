@@ -1,0 +1,4 @@
+Enterprise Policy OPS-501: Deployment and Incident Management.
+Production deployments are restricted to Tuesday through Thursday between 10:00 UTC and 16:00 UTC.
+Deployments require a green CI/CD pipeline with 100% test coverage on critical paths and automated rollback triggers.
+Sev-1 incidents require an incident commander and status updates published to the status page within 15 minutes.
