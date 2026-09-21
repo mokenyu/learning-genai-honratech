@@ -1,0 +1,6 @@
+Alex Morgan | amorgan.dev@example.com | San Francisco, CA
+
+Profile:
+Senior AI Platform Engineer with over 7 years of hands-on experience designing distributed LLM systems, 
+RAG pipelines, and high-concurrency microservices. Expert in Python, FastAPI, LangChain, PostgreSQL, 
+and Kubernetes. Previously scaled real-time search infra serving 50M requests/day at DataFlow Systems.

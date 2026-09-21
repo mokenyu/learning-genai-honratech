@@ -1,0 +1,13 @@
+INVOICE #INV-2026-8841
+Date: 2026-09-15
+Issued By: Acme Cloud Infrastructure Inc. (VAT: US99482104)
+Contact: billing@acmecloud.io
+
+Bill Items:
+1. Kubernetes Dedicated Cluster (Large) - 2 units @ .00 = .00
+2. Enterprise Support Plan - 1 unit @ .00 = .00
+3. Automated Daily Snapshots (500GB) - 1 unit @ .00 = .00
+
+Subtotal: .00
+Tax (10% state tax): .00
+Total Balance Due: .00 USD
