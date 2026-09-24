@@ -28,9 +28,7 @@ def search_product(category: str, page: int, id:Optional[int]=None):
     if id in data:
         fetched = data[id]
     else:
-        return{
-            {"error": "id doesn't exist"}
-        }
+        return {"error": "id doesn't exist"}
     return {
         "data": fetched,
         "category": category,
