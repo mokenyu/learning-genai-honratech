@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 app = APIRouter(prefix="/multi", tags=["Miscellaneous"])
 
@@ -58,8 +59,6 @@ def get_config(temperature: float):
         return { "error": "temperature should be between 0 and 1" }
     return { "temperature":temperature}
 
-
-from pydantic import BaseModel
 
 # REQUEST BODY
 # define the type of data or the structure of data to be stored
