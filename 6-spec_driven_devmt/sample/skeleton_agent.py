@@ -4,8 +4,7 @@ Implementation File: skeleton_agent.py
 Fulfills Specification: mini-spec-sample.md (Cross-Border Treasury & FX Fee Auditor Agent)
 
 Architecture:
-- LangChain ReAct Reasoning Loop (create_react_agent + AgentExecutor)
-- Dual Compatibility: Works on both classic LangChain and LangChain v1 / LangGraph
+- LangChain ReAct Reasoning Loop (create_agent)
 - LLM: Google Gemini (gemini-3.6-flash)
 - Strict Pydantic Data Contracts for Input Validation
 - Production Tool Wrappers with Error Trapping (handle_tool_error=True)
@@ -18,55 +17,8 @@ from pydantic import BaseModel, Field, ValidationError
 from dotenv import load_dotenv
 
 from langchain_core.tools import tool, ToolException
-from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-# =====================================================================
-# Dual Compatibility Shim for create_react_agent & AgentExecutor
-# Supports both classic LangChain and LangChain v1.x (LangGraph engine)
-# =====================================================================
-try:
-    from langchain.agents import create_react_agent, AgentExecutor
-    CLASSIC_LANGCHAIN = True
-except ImportError:
-    from langgraph.prebuilt import create_react_agent as _lg_create_react_agent
-    CLASSIC_LANGCHAIN = False
-
-    class AgentExecutor:
-        """Compatibility executor bridging LangGraph CompiledStateGraph to AgentExecutor interface."""
-        def __init__(self, agent: Any, tools: list = None, verbose: bool = True, 
-                     max_iterations: int = 5, handle_parsing_errors: bool = True):
-            self.agent = agent
-            self.tools = tools or []
-            self.verbose = verbose
-            self.max_iterations = max_iterations
-
-        def invoke(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-            user_input = inputs.get("input", "")
-            if self.verbose:
-                print(f"\n[AgentExecutor: Starting ReAct reasoning on input]\nQuery: {user_input}\n")
-            
-            result = self.agent.invoke({"messages": [("user", user_input)]})
-            messages = result.get("messages", [])
-            last_message = messages[-1] if messages else None
-            
-            output_text = ""
-            if last_message:
-                if isinstance(last_message.content, list):
-                    text_parts = [item.get("text", "") for item in last_message.content if isinstance(item, dict) and "text" in item]
-                    output_text = "".join(text_parts) if text_parts else str(last_message.content)
-                else:
-                    output_text = str(last_message.content)
-
-            if self.verbose:
-                print("\n[AgentExecutor: Execution Complete]")
-
-            return {"output": output_text, "messages": messages}
-
-    def create_react_agent(llm: Any, tools: list, prompt: Any = None):
-        """Creates ReAct agent using LangGraph prebuilt engine."""
-        sys_prompt = prompt.template if hasattr(prompt, "template") else str(prompt) if prompt else None
-        return _lg_create_react_agent(model=llm, tools=tools, prompt=sys_prompt)
+from langchain.agents import create_agent
 
 
 # =====================================================================
@@ -180,8 +132,9 @@ calculate_tiered_compliance_fee.handle_tool_error = True
 TREASURY_AGENT_PROMPT = """You are the Senior Cross-Border Treasury & FX Fee Auditor Agent at Honra Capital.
 Your objective is to evaluate corporate capital transfers according to strict financial compliance rules.
 
-You have access to the following tools:
-{tools}
+You have access to two tools:
+1. `fetch_live_fx_quote`: Retrieves spot FX exchange rate and volatility rating.
+2. `calculate_tiered_compliance_fee`: Calculates tiered platform fee and urgency surcharge.
 
 RULES OF ENGAGEMENT:
 1. Tool Invocation Order: You MUST first invoke `fetch_live_fx_quote` for the target currency. Next, invoke `calculate_tiered_compliance_fee`.
@@ -206,20 +159,15 @@ Required Markdown Output Format:
   - Total Settlement Fee: $[Amount] USD
 - **Net Converted Total:** [Net Total] [Currency]
 - **Risk & Timing Advisory:** [Stagger / Immediate Recommendation based on volatility]
-- **Audit Certification:** Certified by Autonomous Treasury Agent [ID: HONRA-TR-2026]
-
-Begin!
-
-Question: {input}
-Thought:{agent_scratchpad}"""
+- **Audit Certification:** Certified by Autonomous Treasury Agent [ID: HONRA-TR-2026]"""
 
 
 # =====================================================================
 # 4. Agent Assembly & Execution Factory
 # =====================================================================
 
-def build_treasury_agent(llm: Optional[ChatGoogleGenerativeAI] = None) -> AgentExecutor:
-    """Builds and returns the configured ReAct AgentExecutor."""
+def build_treasury_agent(llm: Optional[ChatGoogleGenerativeAI] = None):
+    """Builds and returns the configured ReAct Agent using modern create_agent."""
     if llm is None:
         load_dotenv()
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -232,17 +180,12 @@ def build_treasury_agent(llm: Optional[ChatGoogleGenerativeAI] = None) -> AgentE
         )
 
     tools = [fetch_live_fx_quote, calculate_tiered_compliance_fee]
-    prompt = PromptTemplate.from_template(TREASURY_AGENT_PROMPT)
-    agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
-
-    executor = AgentExecutor(
-        agent=agent,
+    agent = create_agent(
+        model=llm,
         tools=tools,
-        verbose=True,
-        max_iterations=6,
-        handle_parsing_errors=True
+        system_prompt=TREASURY_AGENT_PROMPT
     )
-    return executor
+    return agent
 
 
 def run_audit(payload: dict) -> str:
@@ -267,9 +210,17 @@ def run_audit(payload: dict) -> str:
     )
 
     # Step 3: Execute ReAct Agent Loop
-    executor = build_treasury_agent()
-    result = executor.invoke({"input": query})
-    return result["output"]
+    agent = build_treasury_agent()
+    result = agent.invoke({"messages": [("user", query)]})
+    messages = result.get("messages", [])
+    last_msg = messages[-1] if messages else None
+
+    if last_msg:
+        if isinstance(last_msg.content, list):
+            parts = [item.get("text", "") for item in last_msg.content if isinstance(item, dict) and "text" in item]
+            return "".join(parts) if parts else str(last_msg.content)
+        return str(last_msg.content)
+    return "No output generated."
 
 
 # =====================================================================

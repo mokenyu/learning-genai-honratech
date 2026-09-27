@@ -21,7 +21,7 @@ The **Cameroon Weather-Augmented Intelligence & Search Agent (WAIS-Agent)** is a
 honra-python/6-spec_driven_devmt/project/weather_and_search_agent/
 ├── backend/
 │   ├── main.py                 # FastAPI application server & REST API endpoints
-│   ├── agent.py                # LangChain / LangGraph ReAct agent loop (Gemini 3.6 Flash)
+│   ├── agent.py                # LangChain ReAct agent loop with create_agent (Gemini 3.6 Flash)
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── weather_tool.py     # OpenWeatherMap API wrapper with Cameroon regional caching
