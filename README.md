@@ -1,5 +1,7 @@
 ## GENAI TRACK LEARNING REPO: HONRATECH BOOTCAMP
 
+Want challenging exercises to test your skills? Go to [the work repo](https://github.com/mokenyu/honra-tech-genai-work-repo)
+
 ### Setup
 
  - Create your [fork](https://github.com/mokenyu/learning-genai-honratech/fork)
